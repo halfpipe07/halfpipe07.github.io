@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>DFA Schedules for Philippine Passport Renewal</title>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/v-tooltip"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+    }
+    table td {
+      border: 1px solid #ddd;
+    }
+
+    table tbody tr > td:first-child {
+      background: none;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: default;
+    }
+
+    table tbody td {
+      background: rgba(231, 76, 60, 0.5);
+      font-size: 10px;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    table tbody td:hover {
+      background: rgba(231, 76, 60, 0.7);
+    }
+
+    table tbody td.available:hover {
+      background: rgba(26, 188, 156, 1)
+    }
+
+    td.manila {
+      background: rgba(231, 76, 60, 0.8);
+    }
+
+    td.available {
+      background: rgba(26, 188, 156,0.5);
+    }
+
+    span.loadText {
+      margin-left: 10px;
+      font-size: 12px;
+      color: rgba(52, 73, 94,1.0);
+    }
+
+    button.refresh[disabled],
+    button.refresh[disabled]:hover,
+    button.refresh[disabled]:active {
+      background: #ddd;
+      cursor: default;
+    }
+
+    button.refresh:active,
+    button.refresh {
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      padding: 0.5em 2em;
+      background: rgba(243, 156, 18,1.0);
+      color: #fff;
+      cursor: pointer;
+      outline: 0;
+    }
+
+    button.refresh:hover {
+      background: rgba(243, 156, 18, 0.8);
+    }
+    .tooltip {
+      background: rgba(52, 73, 94,1.0);
+      padding: 5px 10px;;
+      color: #fff;
+      font-size: 10px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h2>DFA Schedules for Philippine Passport Renewal</h2>
+  <p></p>
+<div id="app">
+  <button class="refresh" :disabled="loadText == 'Loading...'" @click="collectData(0, sites.length)">{{loadText}}</button>
+  <table cellpadding=0 cellspacing=0>
+    <tbody>
+      <tr v-for="(data, siteName, index) in dates">
+        <td>{{siteName}}</td>
+        <template v-for="singleData in data">        
+          <td v-tooltip='siteName' :class='{available: singleData.IsAvailable, manila: index > 7 && index < 14}'>{{toTimestamp(singleData.AppointmentDate)}}</td>
+        </template>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<h6>Powered by <a href="http://www.botbros.ai">BotBros AI</a></h6>
+<script type="text/javascript">
+  (function() {
+      var base_url = 'http://api.manilainvestor.com/dfa/';
+      var sites = [{"Id":10,"Name":"Angeles (MarQuee Mall,Angeles City)"},{"Id":11,"Name":"Bacolod"},{"Id":12,"Name":"Baguio"},{"Id":14,"Name":"Butuan"},{"Id":15,"Name":"Cagayan De Oro"},{"Id":16,"Name":"Calasiao"},{"Id":17,"Name":"Cebu"},{"Id":18,"Name":"Cotabato"},{"Id":4,"Name":"DFA Manila (Aseana)"},{"Id":6,"Name":"DFA NCR East (Megamall)"},{"Id":423,"Name":"DFA NCR North (Robinsons Novaliches)"},{"Id":7,"Name":"DFA NCR Northeast (Ali Mall)"},{"Id":8,"Name":"DFA NCR South (Alabang)"},{"Id":9,"Name":"DFA NCR West (SM Manila)"},{"Id":19,"Name":"Davao"},{"Id":20,"Name":"Dumaguete"},{"Id":21,"Name":"General Santos"},{"Id":22,"Name":"Iloilo"},{"Id":23,"Name":"La Union"},{"Id":24,"Name":"Legazpi"},{"Id":13,"Name":"Lipa"},{"Id":25,"Name":"Lucena"},{"Id":27,"Name":"Pampanga (Robinsons Starmills,San Fernando)"},{"Id":26,"Name":"Puerto Princesa"},{"Id":28,"Name":"Tacloban"},{"Id":29,"Name":"Tuguegarao"},{"Id":30,"Name":"Zamboanga"}];
+      var dates = function() {
+        var d = {};
+        for(var i = 0; i < sites.length; i++) {
+          d[sites[i].Name] = [];
+        }
+        return d;
+      };
+
+      var vm = new Vue({
+        el: '#app',
+        data: {
+            sites: sites,
+            dates: dates(),
+            loadText: 'Refresh'
+        },
+        mounted: function() {
+          this.collectData(0, this.sites.length);
+        },
+        methods: {
+          collectData: function(i, length) {
+            this.loadText = 'Loading...';
+            var siteId = sites[i].Id;
+            var siteName = sites[i].Name;
+            i++;
+            axios.get(base_url + siteId)
+            .then((response) => {
+              if(i < sites.length) {
+                this.collectData(i, sites.length);
+              } else {
+                this.loadText = 'Refresh';
+              }
+              this.dates[siteName] = response.data;
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+          },
+          toTimestamp: function(unix_timestamp) {
+            var date = new Date(unix_timestamp);
+            return ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2); // + '/' + date.getFullYear()
+          }
+        }
+      });
+    })()
+</script>
+</body>
+</html>
