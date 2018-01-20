@@ -33,6 +33,7 @@
       background: rgba(231, 76, 60, 0.7);
     }
 
+    table td.site-name.available,
     table tbody td.available:hover {
       background: rgba(26, 188, 156, 1)
     }
@@ -91,7 +92,7 @@
   <table cellpadding=0 cellspacing=0>
     <tbody>
       <tr v-for="(data, siteName, index) in dates">
-        <td>{{siteName}}</td>
+        <td class="site-name" :class='{available: checkAll(data)}'>{{siteName}}</td>
         <template v-for="singleData in data">        
           <td v-tooltip='siteName' :class='{available: singleData.IsAvailable, manila: index > 7 && index < 14}'>{{toTimestamp(singleData.AppointmentDate)}}</td>
         </template>
@@ -154,6 +155,15 @@
           toTimestamp: function(unix_timestamp) {
             var date = new Date(unix_timestamp);
             return ('0' + (date.getMonth() + 1)).slice(-2) + '/' + ('0' + date.getDate()).slice(-2) + ': ' + daysOfTheWeek[date.getDay()]; // + '/' + date.getFullYear()
+          },
+          checkAll: function(data) {
+            var availability = 0;
+            for(var i=0; i<data.length; i++) {
+              if(!!data[i].IsAvailable) {
+                availability++;
+              }
+            }
+            return availability > 0;
           }
         }
       });
